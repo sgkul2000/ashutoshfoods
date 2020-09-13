@@ -6,7 +6,7 @@ const OrderSchema = new mongoose.Schema({
 	amount: {
 		type: Number,
 		required: true,
-		trim:true
+		trim: true
 	},
 	cart: [{
 		type: mongoose.Schema.ObjectId,

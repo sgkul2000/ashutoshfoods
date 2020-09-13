@@ -25,7 +25,12 @@ const ProductSchema = new mongoose.Schema({
     images:[{
         type: String,
         required:false,
-    }]
+    }],
+    category:{
+        type: String,
+        required: true,
+        enum: ['bakery', 'dryfruits', 'vegitables']
+    }
 }, {
 	timestamps: true,
 	collection: "products"

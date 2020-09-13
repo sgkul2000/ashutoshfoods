@@ -4,21 +4,12 @@ const Handlebars = require("handlebars");
 const router = express.Router();
 
 
-const JsonWebToken = require("jsonwebtoken");
-const mongoose = require("mongoose");
-mongoose.set('useCreateIndex', true);
+const jwt = require("jsonwebtoken");
 const Bcrypt = require("bcrypt");
 
-// const process.env.PRIVATE_KEY = "shco97S6CSDCNJ"
 const User = require("./models/userModel");
 const Order = require("./models/orderModel");
 const Product = require("./models/productModel");
-
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-
 
 
 
@@ -32,17 +23,28 @@ router.post("/signup", (req, res) => {
     });
     return
   }
-
+  try{
+    var isAdmin
+    if(req.body.SECRET_KEY === process.env.PRIVATE_KEY){
+      isAdmin = true
+    } else {
+      isAdmin = false
+    }
+  } catch(err) {
+    console.error(err)
+  }
   User.create({
     email: req.body.email,
     username: req.body.username,
     password: Bcrypt.hashSync(req.body.password, 8),
-    fullname: req.body.fullname
+    fullname: req.body.fullname,
+    isAdmin: isAdmin
   }).then((user) => {
-    const token = JsonWebToken.sign({
+    const token = jwt.sign({
       id: user._id,
       email: user.email,
       username: user.username,
+      isAdmin: user.isAdmin
     }, process.env.PRIVATE_KEY, {
       expiresIn: 86400
     });
@@ -91,10 +93,11 @@ router.post("/login", (req, res) => {
           error: "Password is incorrect!"
         });
       } else {
-        const token = JsonWebToken.sign({
+        const token = jwt.sign({
           id: user._id,
           email: user.email,
           username: user.username,
+          isAdmin: user.isAdmin
         }, process.env.PRIVATE_KEY, {
           expiresIn: 86400
         });

@@ -16,7 +16,7 @@ npm run dev
 
 #### Running in production mode:
 ```
-npm run dev
+npm run start
 ```
 
 

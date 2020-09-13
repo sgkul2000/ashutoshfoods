@@ -3,22 +3,11 @@ const hbs = require('express-handlebars');
 const Handlebars = require("handlebars");
 const router = express.Router();
 
+const jwt = require("jsonwebtoken");
 
-const JsonWebToken = require("jsonwebtoken");
-const mongoose = require("mongoose");
-mongoose.set('useCreateIndex', true);
-const Bcrypt = require("bcrypt");
-
-// const SECRET_JWT_CODE = "shco97S6CSDCNJ"
 const User = require("./models/userModel");
 const Order = require("./models/orderModel");
 const Product = require("./models/productModel");
-
-
-mongoose.connect(process.env.MONGO_URI, {
-	useNewUrlParser: true,
-	useUnifiedTopology: true
-})
 
 function authenticateToken(req, res, next) {
 	// Gather the jwt access token from the request header
@@ -35,11 +24,37 @@ function authenticateToken(req, res, next) {
 	})
 }
 
+function authenticateTokenAdmin(req, res, next) {
+	// Gather the jwt access token from the request header
+	const authHeader = req.headers['authorization']
+	const token = authHeader && authHeader.split(' ')[1]
+	if (token == null) return res.sendStatus(401) // if there isn't any token
+
+	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
+		console.log(err)
+		if (err) return res.sendStatus(403)
+		if (user.isAdmin) {
+			req.user = user
+			next()
+		} else {
+			return res.sendStatus(403)
+		}
+		// next() // pass the execution off to whatever request the client intended
+	})
+}
+
 
 router.get('/', async (req, res) => {
 	// console.log(req.body)
+	let params = {}
+	if(req.query.category){
+		console.log(req.query.category)
+		params = {
+			"category": req.query.category
+		}
+	}
 	try {
-		const products = await Product.find()
+		const products = await Product.find(params)
 		res.send({
 			success: true,
 			data: products
@@ -53,18 +68,19 @@ router.get('/', async (req, res) => {
 	}
 });
 
-router.post('/', (req, res) => {
+router.post('/', authenticateTokenAdmin, (req, res) => {
 	// console.log(req.body)
 	let product = new Product({
 		name: req.body.name,
 		description: req.body.description,
 		price: req.body.price,
 		per: req.body.per,
+		category: req.body.category
 	})
 	product.save((error, product) => {
 		if (error) {
 			console.error(error)
-			res.status(404).send({
+			return res.status(404).send({
 				success: false,
 				error: error
 			})
@@ -77,7 +93,7 @@ router.post('/', (req, res) => {
 	});
 })
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', authenticateTokenAdmin, (req, res) => {
 	// console.log(req.params.id)
 	Product.findById(req.params.id, (err, product) => {
 		if (err) {
@@ -90,7 +106,7 @@ router.delete('/:id', (req, res) => {
 		product.remove((error, product) => {
 			if (error) {
 				console.error(error)
-				res.status(500).send({
+				return res.send({
 					success: false,
 					error: err
 				})
@@ -103,7 +119,7 @@ router.delete('/:id', (req, res) => {
 	});
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', authenticateTokenAdmin, (req, res) => {
 	console.log(req.params.id)
 	console.log(req.body)
 	Product.findById(req.params.id, (err, product) => {
