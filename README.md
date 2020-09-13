@@ -4,27 +4,27 @@ Live Url : https://ashutoshfoods.herokuapp.com
 
 ## Instructions to run:
 
-### Establish environment variables:
+#### Establish environment variables:
 ``` 
 cp .env.example .env
 ```
 
-### Running in development mode with Hot Reload:
+#### Running in development mode with Hot Reload:
 ```
 npm run dev
 ```
 
-### Running in production mode:
+#### Running in production mode:
 ```
 npm run dev
 ```
 
 
 ## Meet the team:
-[Ashutosh Parab]()
-[Jeril Joy](https://github.com/The-Maestro-JJ)
-[Varun Badave](https://github.com/varun123H)
-[Shreesh Kulkarni](https://github.com/sgkul2000)
+* [Ashutosh Parab]()
+* [Jeril Joy](https://github.com/The-Maestro-JJ)
+* [Varun Badave](https://github.com/varun123H)
+* [Shreesh Kulkarni](https://github.com/sgkul2000)
 
 
 ![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2FAshutoshParab8)
