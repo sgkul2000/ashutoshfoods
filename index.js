@@ -26,7 +26,7 @@ app.set('view engine', 'hbs');
 app.use(express.static('public'));
 app.use("/api/auth", authRouter);
 app.use("/api/product", productRouter);
-app.get('/index', (req, res) => {
+app.get('/', (req, res) => {
   res.render('index.hbs');
 });
 // app.use('/', routes);
