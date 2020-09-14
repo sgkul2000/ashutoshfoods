@@ -18,6 +18,11 @@ const OrderSchema = new mongoose.Schema({
 		required: true,
 		ref: "User"
 	},
+	address: {
+		type: mongoose.Schema.ObjectId,
+		required: true,
+		ref: "Address"
+	},
 	status:{
 		type: String,
 		required: true,

@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const User = require("./models/userModel");
 const Order = require("./models/orderModel");
 const Product = require("./models/productModel");
+const Address = require("./models/addressModel");
 
 function authenticateToken(req, res, next) {
 	// Gather the jwt access token from the request header

@@ -16,13 +16,17 @@ const UserSchema = new mongoose.Schema({
   email: {
     unique: true,
     trim: true,
-    lowercase: true,
     type: String,
     required: true
   },
   fullname: {
     type: String,
     required: true
+  },
+  phone: {
+    type: Number,
+    required: true,
+    trim: true
   },
   isAdmin: {
     type: Boolean,
@@ -34,6 +38,15 @@ const UserSchema = new mongoose.Schema({
     required:false,
     ref: "Order"
   }],
+  addresses:[{
+    type:mongoose.Schema.ObjectId,
+    required:false,
+    ref: "Address"
+  }],
+  resetToken:{
+    type: String,
+    required: false
+  }
 }, {
   timestamps: true,
   collection: "users"

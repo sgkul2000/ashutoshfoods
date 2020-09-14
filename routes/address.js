@@ -43,26 +43,13 @@ function authenticateTokenAdmin(req, res, next) {
 	})
 }
 
+
+
 router.get('/', authenticateToken, (req, res) => {
-	let params = {
-		user: req.user.id
+	var params = {
+		email: req.user.email
 	}
-	if ((req.user.isAdmin === true) && (parseInt(req.query.all) === 1)) {
-		params = {}
-		if (req.query.id) {
-			params = {
-				_id: req.query.id,
-			}
-		}
-	}
-	if (req.query.id) {
-		// params = {
-		// 	_id: req.query.id,
-		// 	user: req.user.id
-		// }
-		params._id = req.query.id
-	}
-	Order.find(params).populate('user').populate('cart').exec((err, orders) => {
+	User.findOne(params, async (err, user) => {
 		if (err) {
 			console.error(err)
 			return res.status(400).send({
@@ -70,33 +57,21 @@ router.get('/', authenticateToken, (req, res) => {
 				error: err
 			})
 		}
+		// await user.populate('orders')
+		await user.populate('addresses').execPopulate()
+		console.log(user.addresses)
 		res.send({
 			success: true,
-			data: orders
+			data: user.addresses
 		})
 	})
-});
+})
 
-router.post('/', authenticateToken, async (req, res) => {
-	console.log(req.body)
-	var cartProducts = await Product.find({}, async (err, products) => {
-		if (err) {
-			return res.status(400).send({
-				success: false,
-				error: err
-			})
-		}
-		return products
-	})
-	var productList = await cartProducts.filter((product) => {
-		return req.body.cart.includes(product._id.toString())
-	})
-	var amount = 0
-	for (let index = 0; index < productList.length; index++) {
-		// await console.log('product price', productList[index].price)
-		amount += await productList[index].price
+router.get('/:id', authenticateToken, (req, res) => {
+	var params = {
+		email: req.user.email
 	}
-	var orderAddress = await Address.findById(req.body.address, (err, address) => {
+	User.findOne(params, async (err, user) => {
 		if (err) {
 			console.error(err)
 			return res.status(400).send({
@@ -104,15 +79,31 @@ router.post('/', authenticateToken, async (req, res) => {
 				error: err
 			})
 		}
-		return address
+		// await user.populate('orders')
+		await user.populate('addresses').execPopulate()
+		var requiredAddress = await user.addresses.filter((element) => {
+			return element._id.toString() === req.params.id.toString()
+		})
+		console.log(user.addresses)
+		res.send({
+			success: true,
+			data: requiredAddress[0]
+		})
 	})
-	const newOrder = new Order({
-		user: req.user.id,
-		amount: amount,
-		cart: req.body.cart,
-		address: orderAddress
+})
+router.post('/', authenticateToken, (req, res) => {
+	console.log(req.body)
+	var address = new Address({
+		flat: req.body.flat,
+		buildingName: req.body.buildingName,
+		area: req.body.area,
+		landmark: req.body.landmark,
+		cityName: req.body.cityName,
+		stateName: req.body.stateName,
+		pincode: req.body.pincode,
+		gpsLocation: req.body.gpsLocation,
 	})
-	savedOrder = await newOrder.save(async (err, savedOrder) => {
+	address.save((err, savedAddress) => {
 		if (err) {
 			console.error(err)
 			return res.status(400).send({
@@ -120,54 +111,43 @@ router.post('/', authenticateToken, async (req, res) => {
 				error: err
 			})
 		}
-
-		User.findById({
-			_id: req.user.id
-		}, (error, orderedUser) => {
+		User.findOne({
+			email: req.user.email
+		}, (error, user) => {
 			if (error) {
 				console.error(error)
-				return res.status(400).send({
+				return res.status(401).send({
 					success: false,
 					error: error
 				})
 			}
-			// console.log(orderedUser)
-			orderedUser.orders.push(savedOrder._id)
-			orderedUser.save(async (err, updatedUser) => {
+			console.log(savedAddress._id)
+			user.addresses.push(savedAddress._id)
+			user.save((err, savedUser) => {
 				if (err) {
 					console.error(err)
-					res.status(400).send({
+					return res.status(400).send({
 						success: false,
 						error: err
 					})
 				}
-				// console.log(updatedUser)
-				await savedOrder.populate('cart')
-				await savedOrder.populate('user').execPopulate()
 				res.send({
 					success: true,
-					data: savedOrder
+					data: savedAddress
 				})
 			})
 		})
 	})
 })
 
-router.delete('/:id', authenticateToken, (req, res) => {
-	Order.findById(req.params.id, (err, order) => {
+
+router.delete('/:id', authenticateToken, async (req, res) => {
+	Address.findById(req.params.id, (err, address) => {
 		if (err) {
-			console.status(400).error(err)
-			return res.send({
+			console.error(err)
+			return res.status(400).send({
 				success: false,
 				error: err
-			})
-		}
-		// console.log(order)
-		// console.log(req.user.id ,order.user)
-		if (req.user.id.toString() !== order.user.toString() ^ !(parseInt(req.query.forcedelete) !== 1 && req.user.isAdmin === true)) {
-			return res.status(401).send({
-				success: false,
-				error: "Unauthorized user"
 			})
 		}
 		User.findById(req.user.id, async (err, user) => {
@@ -178,8 +158,8 @@ router.delete('/:id', authenticateToken, (req, res) => {
 					error: err
 				})
 			}
-			var arrayIndex = await user.orders.indexOf(req.params.id)
-			await user.orders.splice(arrayIndex, 1)
+			var arrayIndex = await user.addresses.indexOf(req.params.id)
+			await user.addresses.splice(arrayIndex, 1)
 			await user.save((err, savedUser) => {
 				if (err) {
 					console.error(err)
@@ -191,26 +171,24 @@ router.delete('/:id', authenticateToken, (req, res) => {
 				console.log(savedUser)
 			})
 		})
-		order.remove((error, removedOrder) => {
-			if (error) {
-				console.error(error)
+		address.remove((err, deletedAddress) => {
+			if (err) {
+				console.error(err)
 				return res.status(400).send({
-					status: false,
-					error: error
+					success: false,
+					error: err
 				})
 			}
-			removedOrder.populate('user').execPopulate()
 			res.send({
 				success: true,
-				data: removedOrder
+				data: deletedAddress
 			})
 		})
-	});
-});
+	})
+})
 
-router.put('/:id', authenticateTokenAdmin, (req, res) => {
-	console.log(req.params.id, req.body)
-	Order.findById(req.params.id, (err, order) => {
+router.put('/:id', authenticateToken, (req, res) => {
+	Address.findById(req.params.id, (err, address) => {
 		if (err) {
 			console.error(err)
 			return res.status(400).send({
@@ -218,18 +196,25 @@ router.put('/:id', authenticateTokenAdmin, (req, res) => {
 				error: err
 			})
 		}
-		order.status = req.body.status
-		order.save((error, savedOrder) => {
-			if (error) {
-				console.error(error)
+		address.flat = req.body.flat
+		address.buildingName = req.body.buildingName
+		address.area = req.body.area
+		address.landmark = req.body.landmark
+		address.cityName = req.body.cityName
+		address.stateName = req.body.stateName
+		address.pincode = req.body.pincode
+		address.gpsLocation = req.body.gpsLocation
+		address.save((err, savedAddress) => {
+			if (err) {
+				console.error(err)
 				return res.status(400).send({
 					success: false,
-					error: error
+					error: err
 				})
 			}
 			res.send({
 				success: true,
-				data: savedOrder
+				data: savedAddress
 			})
 		})
 	})

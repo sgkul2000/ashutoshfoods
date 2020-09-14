@@ -16,6 +16,7 @@ dotenv.config();
 const authRouter = require('./routes/auth');
 const productRouter = require('./routes/product');
 const orderRouter = require('./routes/order');
+const addressRouter = require('./routes/address');
 const viewRouter = require('./routes/view');
 
 // setting up mongoose database
@@ -54,6 +55,7 @@ app.use(express.static('public'));
 app.use("/api/auth", authRouter);
 app.use("/api/product", productRouter);
 app.use("/api/order", orderRouter);
+app.use("/api/address", addressRouter);
 
 // view route
 app.use('/', viewRouter);
