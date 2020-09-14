@@ -19,9 +19,8 @@ const OrderSchema = new mongoose.Schema({
 		ref: "User"
 	},
 	address: {
-		type: mongoose.Schema.ObjectId,
+		type: Object,
 		required: true,
-		ref: "Address"
 	},
 	status:{
 		type: String,
