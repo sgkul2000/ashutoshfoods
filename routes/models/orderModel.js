@@ -18,6 +18,12 @@ const OrderSchema = new mongoose.Schema({
 		required: true,
 		ref: "User"
 	},
+	status:{
+		type: String,
+		required: true,
+		default: 'pending',
+		enum:['pending', 'complete', 'archived'],
+	}
 }, {
 	timestamps: true,
 	collection: "orders"

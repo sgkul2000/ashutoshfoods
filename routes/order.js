@@ -48,6 +48,18 @@ router.get('/', authenticateToken, (req, res) => {
 	}
 	if ((req.user.isAdmin === true) && (parseInt(req.query.all) === 1)) {
 		params = {}
+		if(req.query.id){
+			params = {
+				_id: req.query.id,
+			}
+		}
+	}
+	if(req.query.id){
+		// params = {
+		// 	_id: req.query.id,
+		// 	user: req.user.id
+		// }
+		params._id = req.query.id
 	}
 	Order.find(params).populate('user').populate('cart').exec((err, orders) => {
 		if (err) {
@@ -138,26 +150,26 @@ router.delete('/:id', authenticateToken, (req, res) => {
 				error: err
 			})
 		}
-		console.log(order)
-		console.log(req.user.id !== order.user)
-		if( req.user.id !== order.user){
+		// console.log(order)
+		// console.log(req.user.id ,order.user)
+		if (req.user.id.toString() !== order.user.toString() ^ !(parseInt(req.query.forcedelete) !== 1 && req.user.isAdmin === true)) {
 			return res.status(401).send({
 				success: false,
-				error:"Unauthorized user"
+				error: "Unauthorized user"
 			})
 		}
 		User.findById(req.user.id, async (err, user) => {
-			if(err){
+			if (err) {
 				console.error(err)
 				return res.status(400).send({
-					success:false,
-					error:err
+					success: false,
+					error: err
 				})
 			}
 			var arrayIndex = await user.orders.indexOf(req.params.id)
 			await user.orders.splice(arrayIndex, 1)
 			await user.save((err, savedUser) => {
-				if(err){
+				if (err) {
 					console.error(err)
 					return res.status(400).send({
 						success: false,
@@ -183,5 +195,32 @@ router.delete('/:id', authenticateToken, (req, res) => {
 		})
 	});
 });
+
+router.put('/:id', authenticateTokenAdmin, (req, res) => {
+	console.log(req.params.id, req.body)
+	Order.findById(req.params.id, (err, order) => {
+		if(err){
+			console.error(err)
+			return res.status(400).send({
+				success: false,
+				error: err
+			})
+		}
+		order.status = req.body.status
+		order.save((error, savedOrder) => {
+			if(error) {
+				console.error(error)
+				return res.status(400).send({
+					success: false,
+					error: error
+				})
+			}
+			res.send({
+				success: true,
+				data: savedOrder
+			})
+		})
+	})
+})
 
 module.exports = router

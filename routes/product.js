@@ -53,6 +53,15 @@ router.get('/', async (req, res) => {
 			"category": req.query.category
 		}
 	}
+	if(req.query.id){
+		params._id = req.query.id
+	}
+	if(req.query.search){
+		params.name = {
+			$regex : req.query.search,
+			$options: 'i'
+		}
+	}
 	try {
 		const products = await Product.find(params)
 		res.send({
@@ -131,10 +140,21 @@ router.put('/:id', authenticateTokenAdmin, (req, res) => {
 				error: err
 			})
 		}
-		product.name = req.body.name
-		product.description = req.body.description
-		product.price = req.body.price
-		product.per = req.body.per
+		if(req.body.name){
+			product.name = req.body.name
+		}
+		if(req.body.description){
+			product.description = req.body.description
+		}
+		if(req.body.price){
+			product.price = req.body.price
+		}
+		if(req.body.per){
+			product.per = req.body.per
+		}
+		if(req.body.isAvailable){
+			product.isAvailable = req.body.isAvailable
+		}
 		product.save((error, newProduct) => {
 			if (error) {
 				console.error(error)

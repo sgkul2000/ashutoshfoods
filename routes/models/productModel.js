@@ -30,6 +30,11 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['bakery', 'dryfruits', 'vegitables']
+    },
+    isAvailable:{
+        type: Boolean,
+        required: true,
+        default: true
     }
 }, {
 	timestamps: true,
