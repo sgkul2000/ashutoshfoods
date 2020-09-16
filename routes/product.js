@@ -13,7 +13,8 @@ const Address = require("./models/addressModel");
 function authenticateToken(req, res, next) {
 	// Gather the jwt access token from the request header
 	const authHeader = req.headers['authorization']
-	const token = authHeader && authHeader.split(' ')[1]
+	// const token = authHeader && authHeader.split(' ')[1]
+	const token = authHeader
 	console.log(token)
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
@@ -48,18 +49,18 @@ function authenticateTokenAdmin(req, res, next) {
 router.get('/', async (req, res) => {
 	// console.log(req.body)
 	let params = {}
-	if(req.query.category){
+	if (req.query.category) {
 		console.log(req.query.category)
 		params = {
 			"category": req.query.category
 		}
 	}
-	if(req.query.id){
+	if (req.query.id) {
 		params._id = req.query.id
 	}
-	if(req.query.search){
+	if (req.query.search) {
 		params.name = {
-			$regex : req.query.search,
+			$regex: req.query.search,
 			$options: 'i'
 		}
 	}
@@ -141,19 +142,19 @@ router.put('/:id', authenticateTokenAdmin, (req, res) => {
 				error: err
 			})
 		}
-		if(req.body.name){
+		if (req.body.name) {
 			product.name = req.body.name
 		}
-		if(req.body.description){
+		if (req.body.description) {
 			product.description = req.body.description
 		}
-		if(req.body.price){
+		if (req.body.price) {
 			product.price = req.body.price
 		}
-		if(req.body.per){
+		if (req.body.per) {
 			product.per = req.body.per
 		}
-		if(req.body.isAvailable){
+		if (req.body.isAvailable) {
 			product.isAvailable = req.body.isAvailable
 		}
 		product.save((error, newProduct) => {

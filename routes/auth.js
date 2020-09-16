@@ -14,23 +14,26 @@ const Address = require("./models/addressModel");
 
 
 function authenticateToken(req, res, next) {
-	// Gather the jwt access token from the request header
-	const authHeader = req.headers['authorization']
-	const token = authHeader && authHeader.split(' ')[1]
-	if (token == null) return res.sendStatus(401) // if there isn't any token
+  // Gather the jwt access token from the request header
+  const authHeader = req.headers['authorization']
+  // const token = authHeader && authHeader.split(' ')[1]
+  const token = authHeader
+  if (token == null) return res.sendStatus(401) // if there isn't any token
 
-	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
-		// console.log(err)
-		if (err) return res.sendStatus(403)
-		req.user = user
-		next() // pass the execution off to whatever request the client intended
-	})
+  jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
+    // console.log(err)
+    if (err) return res.sendStatus(403)
+    req.user = user
+    next() // pass the execution off to whatever request the client intended
+  })
 }
 
 
 router.get('/', authenticateToken, (req, res) => {
-  User.findOne({email: req.user.email}, async (err, user) => {
-    if(err){
+  User.findOne({
+    email: req.user.email
+  }, async (err, user) => {
+    if (err) {
       console.error(err)
       return res.status(400).send({
         success: false,
@@ -165,23 +168,23 @@ router.post('/resetpassword', (req, res) => {
     }
   });
   params = {}
-  if(req.body.username){
+  if (req.body.username) {
     params = {
       username: req.body.username
     }
-  } else if(req.body.email){
+  } else if (req.body.email) {
     params = {
-      email : req.body.email
+      email: req.body.email
     }
   }
-  if(params === {}){
+  if (params === {}) {
     return res.status(400).send({
       success: false,
       error: "Missing parameters"
     })
   }
   User.findOne(params, (err, user) => {
-    if(err){
+    if (err) {
       console.error(err)
       return res.status(400).send({
         success: false,
@@ -192,8 +195,10 @@ router.post('/resetpassword', (req, res) => {
     var resetToken = jwt.sign({
       username: user.username,
       email: user.email,
-    }, process.env.PRIVATE_KEY, {expiresIn:600})
-    var resetLink = "http://localhost:8000/api/auth/reset/"+resetToken
+    }, process.env.PRIVATE_KEY, {
+      expiresIn: 600
+    })
+    var resetLink = "http://localhost:8000/api/auth/reset/" + resetToken
     var mailOptions = {
       from: process.env.MAIL_ID,
       to: user.email,
@@ -281,7 +286,7 @@ body{
 </div>
       `
     };
-  
+
     // transporter.sendMail(mailOptions, function (error, info) {
     //   if (error) {
     //     console.log(error);
@@ -300,42 +305,44 @@ body{
 
 
 router.get('/resetpassword/:token', async (req, res) => {
-  try{
+  try {
     var token = await jwt.decode(req.params.token)
     // var newToken = await jwt.sign({
     //   username: token.username,
     //   email: token.email
     // }, process.env.PRIVATE_KEY, {expiresIn: 600})
-  } catch(err){
+  } catch (err) {
     return res.status(404).send()
   }
   res.send({
-    token:token
+    token: token
   })
 })
 
 router.post('/reset/', (req, res) => {
   var token
-  if(!req.body.password){
+  if (!req.body.password) {
     return res.status(400).send({
       success: false,
       error: "Missing password"
     })
   }
-  try{
+  try {
     token = jwt.decode(req.body.token)
   } catch (err) {
     return res.status(401)
   }
-  User.findOne({email: token.email}, (err, user) => {
-    if(err){
+  User.findOne({
+    email: token.email
+  }, (err, user) => {
+    if (err) {
       console.error(err)
       return res.status(400).send({
         success: false,
         error: err
       })
     }
-    if(user.resetToken && user.resetToken === req.body.token.toString()){
+    if (user.resetToken && user.resetToken === req.body.token.toString()) {
       return res.status(403).send({
         success: false,
         error: "This token has already been user"
@@ -344,7 +351,7 @@ router.post('/reset/', (req, res) => {
     user.password = Bcrypt.hashSync(req.body.password, 8)
     user.resetToken = req.body.token.toString()
     user.save((error, savedUser) => {
-      if(error){
+      if (error) {
         console.error(error)
         return res.status(400).send({
           success: false,
@@ -353,7 +360,7 @@ router.post('/reset/', (req, res) => {
       }
       res.send({
         success: true,
-        data:savedUser
+        data: savedUser
       })
     })
   })
