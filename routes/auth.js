@@ -28,6 +28,26 @@ function authenticateToken(req, res, next) {
   })
 }
 
+function authenticateTokenAdmin(req, res, next) {
+  // Gather the jwt access token from the request header
+  const authHeader = req.headers['authorization']
+  // const token = authHeader && authHeader.split(' ')[1]
+  const token = authHeader
+  if (token == null) return res.sendStatus(401) // if there isn't any token
+
+  jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
+    // console.log(err)
+    if (err) return res.sendStatus(403)
+    if (user.isAdmin) {
+      req.user = user
+      next()
+    } else {
+      return res.sendStatus(403)
+    }
+    // next() // pass the execution off to whatever request the client intended
+  })
+}
+
 
 router.get('/', authenticateToken, (req, res) => {
   User.findOne({
@@ -46,6 +66,22 @@ router.get('/', authenticateToken, (req, res) => {
     res.send({
       success: true,
       data: user
+    })
+  })
+})
+
+router.get('/admin', authenticateTokenAdmin, (req, res) => {
+  User.find({isAdmin: true}, (err, admins) => {
+    if(err){
+      console.error(err)
+      return res.status(400).send({
+        success: false,
+        error: err
+      })
+    }
+    res.send({
+      success: true,
+      data: admins
     })
   })
 })
@@ -364,6 +400,62 @@ router.post('/reset/', (req, res) => {
       })
     })
   })
+})
+
+
+router.post('/admin', authenticateTokenAdmin, (req, res) => {
+  console.log(req.body)
+  User.findOne({email:req.body.email}, (err, user) => {
+    if(err){
+      console.error(err)
+      return res.status(400).send({
+        success: false,
+        error: err
+      })
+    }
+    user.isAdmin = true
+    user.save((err, savedUser) => {
+      if(err){
+        console.error(err)
+        return res.status(400).send({
+          success: false,
+          error: err
+        })
+      }
+      res.send({
+        success: true,
+        data: savedUser
+      })
+    })
+  })
+})
+
+router.delete('/admin', authenticateTokenAdmin, (req, res) => {
+  console.log(req.query)
+  User.findById(req.query.id, (err,user) => {
+    if(err){
+      console.error(err)
+      return res.status(400).send({
+        success: false,
+        error: err
+      })
+    }
+    user.isAdmin = false
+    user.save((err, removedUser) => {
+      if(err){
+        console.error(err)
+        return res.status(400).send({
+          success: false,
+          error: err
+        })
+      }
+      res.send({
+        success: true,
+        data: removedUser
+      })
+    })
+  })
+  // res.send()
 })
 
 

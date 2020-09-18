@@ -172,19 +172,21 @@ router.post('/', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, (req, res) => {
 	Order.findById(req.params.id, (err, order) => {
 		if (err) {
-			console.status(400).error(err)
-			return res.send({
+			console.error(err)
+			return res.status(400).send({
 				success: false,
 				error: err
 			})
 		}
 		// console.log(order)
 		// console.log(req.user.id ,order.user)
-		if (req.user.id.toString() !== order.user.toString() ^ !(parseInt(req.query.forcedelete) !== 1 && req.user.isAdmin === true)) {
-			return res.status(401).send({
-				success: false,
-				error: "Unauthorized user"
-			})
+		if (req.user.id.toString() !== order.user.toString()) {
+			if(!(parseInt(req.query.forcedelete) === 1 && req.user.isAdmin === true)){
+				return res.status(401).send({
+					success: false,
+					message: "Unauthorized user"
+				})
+			}
 		}
 		User.findById(req.user.id, async (err, user) => {
 			if (err) {
