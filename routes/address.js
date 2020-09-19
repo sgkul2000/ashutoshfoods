@@ -13,12 +13,12 @@ const Address = require("./models/addressModel");
 function authenticateToken(req, res, next) {
 	// Gather the jwt access token from the request header
 	const authHeader = req.headers['authorization']
-	// const token = authHeader && authHeader.split(' ')[1]
-	const token = authHeader
+	const token =  authHeader.split(' ')[1] || authHeader
+	// const token = authHeader
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
 	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
-		// console.log(err)
+		console.log(err)
 		if (err) return res.sendStatus(403)
 		req.user = user
 		next() // pass the execution off to whatever request the client intended
@@ -28,8 +28,9 @@ function authenticateToken(req, res, next) {
 function authenticateTokenAdmin(req, res, next) {
 	// Gather the jwt access token from the request header
 	const authHeader = req.headers['authorization']
+	const token =  authHeader.split(' ')[1] || authHeader
 	// const token = authHeader && authHeader.split(' ')[1]
-	const token = authHeader
+	// const token = authHeader
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
 	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
@@ -99,11 +100,11 @@ router.post('/', authenticateToken, (req, res) => {
 		flat: req.body.flat,
 		buildingName: req.body.buildingName,
 		area: req.body.area,
-		landmark: req.body.landmark,
+		landmark: req.body.landmark ? req.body.landmark : "",
 		cityName: req.body.cityName,
 		stateName: req.body.stateName,
 		pincode: req.body.pincode,
-		gpsLocation: req.body.gpsLocation,
+		gpsLocation: req.body.gpsLocation ? req.body.gpsLocation : "",
 	})
 	address.save((err, savedAddress) => {
 		if (err) {
@@ -201,11 +202,15 @@ router.put('/:id', authenticateToken, (req, res) => {
 		address.flat = req.body.flat
 		address.buildingName = req.body.buildingName
 		address.area = req.body.area
-		address.landmark = req.body.landmark
+		if(req.body.landmark){
+			address.landmark = req.body.landmark
+		}
 		address.cityName = req.body.cityName
 		address.stateName = req.body.stateName
 		address.pincode = req.body.pincode
-		address.gpsLocation = req.body.gpsLocation
+		if(req.body.gpsLocation){
+			address.gpsLocation = req.body.gpsLocation
+		}
 		address.save((err, savedAddress) => {
 			if (err) {
 				console.error(err)

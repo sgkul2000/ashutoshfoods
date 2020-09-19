@@ -13,8 +13,9 @@ const Address = require("./models/addressModel");
 function authenticateToken(req, res, next) {
 	// Gather the jwt access token from the request header
 	const authHeader = req.headers['authorization']
+	const token =  authHeader.split(' ')[1] || authHeader
 	// const token = authHeader && authHeader.split(' ')[1]
-	const token = authHeader
+	// const token = authHeader
 	console.log(token)
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
@@ -29,7 +30,8 @@ function authenticateToken(req, res, next) {
 function authenticateTokenAdmin(req, res, next) {
 	// Gather the jwt access token from the request header
 	const authHeader = req.headers['authorization']
-	const token = authHeader
+	const token =  authHeader.split(' ')[1] || authHeader
+	// const token = authHeader
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
 	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {

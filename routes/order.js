@@ -14,7 +14,8 @@ function authenticateToken(req, res, next) {
 	// Gather the jwt access token from the request header
 	const authHeader = req.headers['authorization']
 	// const token = authHeader && authHeader.split(' ')[1]
-	const token = authHeader
+	// const token = authHeader
+	const token =  authHeader.split(' ')[1] || authHeader
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
 	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
@@ -29,7 +30,8 @@ function authenticateTokenAdmin(req, res, next) {
 	// Gather the jwt access token from the request header
 	const authHeader = req.headers['authorization']
 	// const token = authHeader && authHeader.split(' ')[1]
-	const token = authHeader
+	// const token = authHeader
+	const token =  authHeader.split(' ')[1] || authHeader
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
 	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
@@ -52,27 +54,27 @@ router.get('/', authenticateToken, (req, res) => {
 	if ((req.user.isAdmin === true)) {
 		if (parseInt(req.query.all) === 1) {
 			params = {}
-			if (parseInt(req.query.completed) === 1) {
-				params = {
-					status: 'complete'
-				}
-			} else if (parseInt(req.query.all) === 0) {
-				params = {
-					status: 'pending'
-				}
+		} else if (parseInt(req.query.completed) === 1) {
+			params = {
+				status: 'complete'
+			}
+		} else if (parseInt(req.query.completed) === 0) {
+			params = {
+				status: 'pending'
 			}
 		} else if (req.query.id) {
 			params = {
 				_id: req.query.id,
 			}
 		}
-	}
-	if (req.query.id) {
-		// params = {
-		// 	_id: req.query.id,
-		// 	user: req.user.id
-		// }
-		params._id = req.query.id
+	} else {
+		if (req.query.id) {
+			// params = {
+			// 	_id: req.query.id,
+			// 	user: req.user.id
+			// }
+			params._id = req.query.id
+		}
 	}
 	Order.find(params, null, {
 		sort: {
