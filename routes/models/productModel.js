@@ -29,7 +29,7 @@ const ProductSchema = new mongoose.Schema({
     category:{
         type: String,
         required: true,
-        enum: ['bakery', 'dryfruits', 'vegitables']
+        enum: ['bakery', 'dryfruits', 'vegitables', 'spices']
     },
     isAvailable:{
         type: Boolean,

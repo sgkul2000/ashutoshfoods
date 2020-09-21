@@ -15,7 +15,7 @@ function authenticateToken(req, res, next) {
 	const authHeader = req.headers['authorization']
 	// const token = authHeader && authHeader.split(' ')[1]
 	// const token = authHeader
-	const token =  authHeader.split(' ')[1] || authHeader
+	const token = authHeader.split(' ')[1] || authHeader
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
 	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
@@ -31,7 +31,7 @@ function authenticateTokenAdmin(req, res, next) {
 	const authHeader = req.headers['authorization']
 	// const token = authHeader && authHeader.split(' ')[1]
 	// const token = authHeader
-	const token =  authHeader.split(' ')[1] || authHeader
+	const token = authHeader.split(' ')[1] || authHeader
 	if (token == null) return res.sendStatus(401) // if there isn't any token
 
 	jwt.verify(token, process.env.PRIVATE_KEY, (err, user) => {
@@ -183,7 +183,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
 		// console.log(order)
 		// console.log(req.user.id ,order.user)
 		if (req.user.id.toString() !== order.user.toString()) {
-			if(!(parseInt(req.query.forcedelete) === 1 && req.user.isAdmin === true)){
+			if (!(parseInt(req.query.forcedelete) === 1 && req.user.isAdmin === true)) {
 				return res.status(401).send({
 					success: false,
 					message: "Unauthorized user"
@@ -253,6 +253,38 @@ router.put('/:id', authenticateTokenAdmin, (req, res) => {
 			})
 		})
 	})
+})
+
+
+router.get('/sales/total', (req, res) => {
+	Order.aggregate([{
+			$match: {
+				status: 'complete'
+			}
+		},
+		{
+			$group: {
+				_id: {
+					$month: '$createdAt'
+				},
+				sales: {
+					$sum: '$amount'
+				}
+			}
+		}
+	], (err, orders) => {
+		if (err) {
+			console.error(err)
+			return res.status(400).send({
+				status: false,
+				error: err
+			})
+		}
+		res.json({
+			success: true,
+			data: orders
+		});
+	});
 })
 
 module.exports = router

@@ -27,6 +27,15 @@ const OrderSchema = new mongoose.Schema({
 		required: true,
 		default: 'pending',
 		enum:['pending', 'complete', 'archived'],
+	},
+	estimatedDelivery:{
+		type: Date,
+		required: false,
+		default: () => {
+			var today = new Date()
+			today.setDate(today.getDate() + 4)
+			return today
+		}
 	}
 }, {
 	timestamps: true,
