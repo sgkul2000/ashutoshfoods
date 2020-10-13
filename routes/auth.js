@@ -157,13 +157,13 @@ router.post("/login", (req, res) => {
     email: req.body.email
   }).then((user) => {
     if (!user) {
-      res.json({
+      res.status(400).json({
         auth: false,
         error: "User does not exist"
       })
     } else {
       if (!Bcrypt.compareSync(req.body.password, user.password)) {
-        res.json({
+        res.status(401).json({
           auth: false,
           error: "Password is incorrect!"
         });
